@@ -2,6 +2,12 @@
 grace_period_minutes: 5
 meeting_start_hour: 18
 meeting_end_hour: 20
-input_path: ""
-output_path: ""
+input_path: "/Users/Angel/Documents/python_code/csv_input/"
+output_path: "/Users/Angel/Documents/python_code/csv_output/"
 chapter-officers:
+  Test_Officer:
+    email: "officer@somthing.org"
+    user_name: "Some Officer"
+    member_first_name: "Some"
+    member_last_name: "Officer"
+    member_num: "536176"
