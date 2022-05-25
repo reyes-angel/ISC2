@@ -151,8 +151,6 @@ def CreateDataFrame(ioDictionary):
     df_host = pd.read_csv(ioDictionary["Host"], header=0)
     df_host["Type"] = "Host"
     # We weren't able to reliably get the meeting date from the Report table (see comment above) so we'll get it from the Host table.
-    #str_meeting_date = dt.strptime(df_host.iloc[0]["Join Time"], '%Y %H:%M:%S').date()
-    #str_meeting_date = dt.strptime(df_host.iloc[0]["Join Time"], '%b %d, %Y %I:%M:%S').date()
     str_meeting_date = pd.to_datetime(df_host.iloc[0]["Join Time"])
 
     df_attendee = pd.read_csv(ioDictionary["Attendee"], header=0)
