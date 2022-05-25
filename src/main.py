@@ -71,7 +71,7 @@ def ProcessFiles():
 
         io_dict = ReadReportFile(in_file_name)
         df, meeting_date, meeting_name = CreateDataFrame(io_dict)
-        ProcessDataFrame(df, meeting_date, meeting_name)
+        ProcessDataFrame(df, meeting_date.date(), meeting_name)
         
         df.drop(["Join Time", "Leave Time", "Minutes Attended", "Registration Time", "Approval Status"], axis=1, inplace=True)
         df.drop_duplicates(keep="first", subset=["Email"], inplace=True)
@@ -143,15 +143,13 @@ def ReadReportFile(fileName):
 # Returns a tuple (data frame, meeting date, meeting name)
 def CreateDataFrame(ioDictionary):
     df_report = pd.read_csv(ioDictionary["Report"], header=0)
-    # Commented this because I've found that in some of the input filesthe Actual Start Time value is the day before the meeting!
-    # We get the meeting date from the "Join Time" field of the Host table instead.
-    #str_meeting_date = dt.strptime(df_report.iloc[0]["Actual Start Time"], '%b %d, %Y %I:%M %p').date()
-    str_meeting_name = df_report.iloc[0]["Topic"]
+    meeting_name = df_report.iloc[0]["Topic"]
 
     df_host = pd.read_csv(ioDictionary["Host"], header=0)
     df_host["Type"] = "Host"
-    # We weren't able to reliably get the meeting date from the Report table (see comment above) so we'll get it from the Host table.
-    str_meeting_date = pd.to_datetime(df_host.iloc[0]["Join Time"])
+    # We weren't able to reliably get the meeting date from the Report table because the "Actual Start Time" value is sometimes the day before the meeting!
+    # We'll get it from the Host table.
+    meeting_date = pd.to_datetime(df_host.iloc[0]["Join Time"])
 
     df_attendee = pd.read_csv(ioDictionary["Attendee"], header=0)
     df_attendee["Type"] = "Attendee"
@@ -172,7 +170,7 @@ def CreateDataFrame(ioDictionary):
         df_other = pd.DataFrame()
 
     df = pd.concat([df_host, df_panelist, df_attendee, df_other], ignore_index=True)
-    return df, str_meeting_date, str_meeting_name
+    return df, meeting_date, meeting_name
 
 def ProcessDataFrame(df, meeting_date, meeting_name):
     meeting_start = np.datetime64(dt.combine(meeting_date, datetime.time(meeting_start_hour, 00)))
@@ -199,7 +197,7 @@ def ProcessDataFrame(df, meeting_date, meeting_name):
     # Add new fields to the data frame
     df["# CPEs"] = 0.0
     df["CPE Qualifying Minutes"] = 0.0
-    df["Date of Activity"] = meeting_date
+    df["Date of Activity"] = dt.strftime(meeting_date, "%m/%d/%Y")
     df["Title of Meeting"] = meeting_name
     
     # When someone has connected to the meeting more than once there are multiple entries in the report.  
