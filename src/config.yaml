@@ -1,0 +1,7 @@
+---
+grace_period_minutes: 5
+meeting_start_hour: 18
+meeting_end_hour: 20
+input_path: ""
+output_path: ""
+chapter-officers:
