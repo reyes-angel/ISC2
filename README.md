@@ -27,3 +27,5 @@ In order to properly calculate the earned CPE's the total time attended must be 
 - **Attendee left after the meeting started or within the configured grace period before the end of the meeting**: Extend leave time to the end of the meeting
       
 The default grace period is 5 minutes.
+
+A sample attendee report file is included in the sample_file folder.
