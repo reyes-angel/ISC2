@@ -1,9 +1,9 @@
 ---
-grace_period_minutes: 5
+# File Processing Configuration Values
 meeting_start_hour: 18
 meeting_end_hour: 20
-input_path: "/Users/Angel/Documents/python_code/csv_input/"
-output_path: "/Users/Angel/Documents/python_code/csv_output/"
+input_path: "<<path to input files here>>"
+output_path: "<<path to output files here>>"
 chapter-officers:
   Test_Officer:
     email: "officer@somthing.org"
@@ -11,3 +11,11 @@ chapter-officers:
     member_first_name: "Some"
     member_last_name: "Officer"
     member_num: "536176"
+    personal_email: "me@gmail.com"
+
+
+## Google Configuration Values
+# ID of google sheet to store metrics
+metrics_sheet_id: "some value here"
+# Folder to store CPE files
+cpe_folder_id: "somve value here"
