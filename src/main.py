@@ -4,17 +4,17 @@ from config import Config
 import sys
 import getopt
 
-
 def main(argv):
-
     c = Config()
-    rdm = ReportDataManager(c)
-    rp = ReportProcessor(c)
+    webinarFile = ""
+    registrationFile = ""
+    attendeeFile = ""
+    processedFiles = ""
 
     # try:
     #     opts, args = getopt.getopt(argv, "i:lh", ["input=", "list", "help"])
     # except getopt.GetoptError:
-    #     print("main.py -i <inputfile>")
+    #     print("main.py -i <inputfile name>")
     #     sys.exit(2)
 
     # for opt, arg in opts:
@@ -25,26 +25,33 @@ def main(argv):
     #         driveFiles = rdm.GetDriveFiles(c.AttendeeReportFolderID)
     #         for file in driveFiles:
     #             print(file["name"])
+    #         sys.exit()
     #     elif opt in ("-i", "--input"):
-    #         inputfile = arg
-    
-    # TODO: Remove this hard coded value
-    inputFile = "20220712_attendee_report.csv"
-    
+    #         inputFile = arg
 
-    # TODO: Add a check to be sure it doesn't already exist
-    # Should the check be in the report data manager? Or should it be here?
-    #fileList = [f for f in listdir(input_path) if isfile(join(input_path, f)) and f.endswith(".csv")]
-    # If the file exists, ask if they want to delete it, continue with the existing file, or exit the program
+    rdm = ReportDataManager(c)
+    rp = ReportProcessor(c)
 
-    #rdm.DownloadDriveFile(c.AttendeeReportFolderID, inputFile)
+    #If the files being processed are meeting files, as opposed to a webinar file, the webinarFile variable value should be a zero length string.
+    webinarFile = "" #"20220913_attendee_report.csv"
+
+    registrationFile = "Dec13-2022_RegistrationReport.csv"
+    attendeeFile = "Dec13-2022_ParticipantsReport.csv"
+
+    # NOTE: If the file exists in the input folder, on your local system, it will be removed so that a fresh copy will be downloaded.
+    if len(webinarFile) >= 1:
+        rdm.DownloadDriveFile(c.AttendeeReportFolderID, webinarFile)
+        processedFiles = rp.ProcessWebinarFile(webinarFile)
+    elif len(registrationFile) >= 1 & len(attendeeFile) >= 1:
+        rdm.DownloadDriveFile(c.AttendeeReportFolderID, registrationFile)
+        rdm.DownloadDriveFile(c.AttendeeReportFolderID, attendeeFile)
+        processedFiles = rp.ProcessMeetingFile(registrationFile, attendeeFile)
+    else:
+        print("The input parameters appear to not be set correctly. The process will not continue.")
+        sys.exit()
     
-    # TODO: Check that the file exists locally after download, it should also be a CSV. If the name is wrong it won't download and won't throw an error.
-
-    processedFiles = rp.ProcessFiles(inputFile)
     rdm.WriteCPEFileToDrive(processedFiles["cpe"])
     rdm.WriteMetricsToSheet(processedFiles["metrics"])
-    # TODO: Rename the input file on Google Drive, thier names are not indicative of the meeting date
 
 if __name__ == "__main__":
     main(sys.argv[1:])

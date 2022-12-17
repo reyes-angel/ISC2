@@ -1,4 +1,5 @@
 from __future__ import print_function
+from config import Google
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.http import MediaIoBaseDownload
 from google.auth.transport.requests import Request
@@ -11,30 +12,17 @@ from os.path import isfile, join
 import csv
 import io
 import os
+import os.path
 import shutil
-
+    
 class ReportDataManager:
 
     def __init__(self, configuration):
 
         self.config = configuration
-        
-        service_scopes = [
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
-        ]
-
-        credentialsfile = "../../membermetrics-creds.json"
-
-        if os.path.exists(credentialsfile):
-            creds = service_account.Credentials.from_service_account_file(credentialsfile, scopes=service_scopes)
-
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-
-        self.spreadsheet_service = build('sheets', 'v4', credentials=creds)
-        self.drive_service = build('drive', 'v3', credentials=creds)
+        g = Google()
+        self.sheets_service = g.sheets_service()
+        self.drive_service = g.drive_service()
 
     # After the attendee report(s) have been processed the results will be written to the google sheet where the metrics are stored.
     # The google sheet is the source of the data studio dashboard
@@ -49,7 +37,7 @@ class ReportDataManager:
                     rows.append(row)
 
             body = {'values':  rows}
-            self.spreadsheet_service.spreadsheets().values().append(spreadsheetId=self.config.MetricsSheetID, range="Sheet1!A1", valueInputOption="USER_ENTERED", insertDataOption="INSERT_ROWS", body=body).execute()
+            self.sheets_service.spreadsheets().values().append(spreadsheetId=self.config.MetricsSheetID, range="Sheet1!A1", valueInputOption="USER_ENTERED", insertDataOption="INSERT_ROWS", body=body).execute()
 
     def WriteCPEFileToDrive(self, fileName):
         f = os.path.basename(fileName)
@@ -58,7 +46,7 @@ class ReportDataManager:
             "parents" : [self.config.CPEFolderID]
         }
         
-        media_content = MediaFileUpload(fileName, mimetype="text/csv")
+        media_content = MediaFileUpload(fileName, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         self.drive_service.files().create(body=file_metadata, media_body=media_content).execute()
 
     # Retrieve the list of files from a specific folder
@@ -89,6 +77,9 @@ class ReportDataManager:
             file_name = item['name']
 
             file_name = self.config.InputPath + file_name
+
+            if os.path.exists(file_name):
+                os.remove(file_name)
 
             request = self.drive_service.files().get_media(fileId=file_id)
             fh = io.BytesIO()

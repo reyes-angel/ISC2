@@ -3,3 +3,6 @@
 .venv
 src/__pycache__
 requirements.txt
+credentials.json
+token_doc.json
+src/Experiments/__pycache__/
