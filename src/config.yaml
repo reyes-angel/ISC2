@@ -31,6 +31,14 @@ chapter-officers:
     member_certification_id: "536176"
     personal_email: "me@gmail.com"
     phone_number: "None"
+  Secretary:
+    email: "officer@something.org"
+    user_name: "Some Officer"
+    member_first_name: "Some"
+    member_last_name: "Officer"
+    member_certification_id: "536176"
+    personal_email: "me@gmail.com"
+    phone_number: "None"
 
 # Google Configuration Values
 # ================================

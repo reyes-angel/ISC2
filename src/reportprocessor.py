@@ -90,7 +90,7 @@ class ReportProcessor:
         ws = wb["Chapter-CPE Submission"]
 
         for officer in self.config.Officers:
-            if officer.Role == "Membership":
+            if officer.Role == "Secretary":
                 ws["A3"] = officer.UserName
                 ws["B3"] = officer.PhoneNumber
                 ws["C3"] = officer.ChapterEmail
