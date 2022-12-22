@@ -61,7 +61,11 @@ class ReportProcessor:
         return outputs
 
     def _ProcessFrame(self, processFrame, meetingDate):
-        meeting_topic, cpe_group, cpe_domain = self.meeting.GetInformation(meetingDate)
+        meeting_info = self.meeting.GetInformation(meetingDate)
+        meeting_topic = meeting_info["Meeting_Topic"]
+        cpe_group = meeting_info["CPE_Group"]
+        cpe_domain = meeting_info["CPE_Domain"]
+
         self._ProcessDataFrame(processFrame, meetingDate.date(), meeting_topic)
         
         processFrame.drop(["Join Time", "Leave Time", "Minutes Attended", "Registration Time", "Approval Status"], axis=1, inplace=True)
@@ -69,13 +73,19 @@ class ReportProcessor:
         processFrame.sort_values(by=["Member First Name", "Member Last Name"], inplace=True, ignore_index=True)
 
         metrics_file_name = self.config.OutputPath + "{0}_metrics.csv".format(meetingDate.strftime("%Y%m%d"))
-        attendee_file_name = self.config.InputPath + "{0}_attendee_report.csv".format(meetingDate.strftime("%Y%m%d"))
+        attendee_file_name = self.config.OutputPath + "{0}_attendee_report.csv".format(meetingDate.strftime("%Y%m%d"))
         cpe_file_name = self.config.OutputPath  + "{0}_{1}_ISC2SiliconValleyChapter_CPE.xlsx".format(meetingDate.strftime("%b"), meetingDate.strftime("%Y"))
         
         # Export the Metrics File
         processFrame[["Attended", "Region", "Type", "CPE Qualifying Minutes", "# CPEs", "Date of Activity", "(ISC)2 Member #", "Member First Name", "Member Last Name", "Email"]].to_csv(metrics_file_name, index=False)
-        
+
+        # Export the Attendee File, used in creating/sending CPE certificates.  Filter to only those with an (ISC)2 Member # and who earned more than 0 CPE's
+        processFrame.loc[(processFrame["# CPEs"] > 0) & (processFrame["(ISC)2 Member #"]).notna(), ["Date of Activity", "User Name", 'Email', "# CPEs", "(ISC)2 Member #"]].to_csv(attendee_file_name, index=False)
+
+
         # Export the CPE data into the template file
+        # This process is a little more involved than just saving the results of a data frame to a csv because 
+        # (ISC)2 wants the data to be sent as an excel file, formatted in a way that works for them to operate at scale.
         wb = load_workbook(self.config.CPETemplatePath)
         ws = wb["Chapter-CPE Submission"]
 
@@ -90,6 +100,7 @@ class ReportProcessor:
         ws["E3"] = cpe_group
         ws["F3"] = cpe_domain
 
+        #Filter to only those with an (ISC)2 Member # and who earned more than 0 CPE's
         df_cpe = processFrame.loc[(processFrame["# CPEs"] > 0) & (processFrame["(ISC)2 Member #"]).notna(), ["(ISC)2 Member #", "Member First Name", "Member Last Name", "Title of Meeting", "# CPEs", "Date of Activity"]]
         
         for r in dataframe_to_rows(df_cpe, index=False, header=False):
@@ -98,8 +109,10 @@ class ReportProcessor:
         wb.save(cpe_file_name)
 
         outputs = {
+            "attendees": attendee_file_name,
             "metrics": metrics_file_name,
-            "cpe": cpe_file_name
+            "cpe": cpe_file_name,
+            "meeting_date": meetingDate
         }
         return outputs
 

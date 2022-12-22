@@ -20,10 +20,10 @@ class DistinctAttendees:
 
     def __init__(self, configuration):
         self.config = configuration
-        self.g = Google()
+        self.g = Google(configuration)
     
     def CreateReport(self, inputFile):
-        self.g.download_file_csv(self.config.MetricsSheetID, inputFile, "text/csv")
+        self.g.download_file(self.config.MetricsSheetID, inputFile, "text/csv")
 
         df = pd.read_csv(inputFile, header=0, dtype={"(ISC)2 Member #": str})
         df["Date of Activity"] = pd.to_datetime(df["Date of Activity"])

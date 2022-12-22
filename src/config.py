@@ -5,20 +5,25 @@ from googleapiclient.discovery import build
 from yaml.loader import SafeLoader
 import os
 import yaml
-import datetime as dt
+from datetime import datetime as dt
 import pandas as pd
 import io
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
+import numpy
 
 class Config:
     def __init__(self):
-        with open("../../config.yaml") as f:
+        with open("/Users/Angel/Documents/python_code/ISC2_config/config.yaml") as f:
             config = yaml.load(f, Loader=SafeLoader)
         
+        self.CPECertificateFolderID = config["cpe_certificate_folder_id"]
+        self.CPECertificateTemplateID = config["cpe_certifictate_template_id"]
+        self.CPECertificateSheetID = config["cpe_certificate_sheet_id"]
         self.MetricsSheetID = config["metrics_sheet_id"]
         self.CPEFolderID = config["cpe_folder_id"]
         self.AttendeeReportFolderID = config["attendee_report_folder_id"]
+        self.ConfigPath = config["config_path"]
         self.OutputPath = config["output_path"]
         self.InputPath = config["input_path"]
         self.MeetingStartHour = config["meeting_start_hour"]
@@ -56,10 +61,9 @@ class Officer:
         self.Role = role
 
 class Google:
-    def __init__(self):
-        #TODO: The paths to these files should likely be stored in the config file
-        token_file = "token_doc.json"
-        credential_file = "credentials.json"
+    def __init__(self, config):
+        token_file = config.ConfigPath + "token.json"
+        credential_file = config.ConfigPath + "credentials.json"
         self.creds = None
 
         token_scope = [
@@ -99,7 +103,7 @@ class Google:
     def mail_service(self):
         return build('gmail', 'v1', credentials=self.creds)
     
-    def download_file_csv(self, file_id, file_path_name, mime_type):
+    def download_file(self, file_id, file_path_name, mime_type):
         try:
             request = self.drive_service().files().export_media(fileId=file_id, mimeType=mime_type)
             file = io.BytesIO()
@@ -114,36 +118,79 @@ class Google:
         with open(file_path_name, "wb") as f:
             f.write(file.getbuffer())
 
+    # Checks if a sheet name exists in a google spreadsheet
+    def sheet_name_exists(self, spreadsheet_id, sheet_name):
+        sheet_exists = False
+        sheet_id = -1
+
+        spreadsheet = self.sheets_service().spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+        for sheet in spreadsheet["sheets"]:
+            if sheet["properties"]["title"] == sheet_name:
+                sheet_id = sheet["properties"]["sheetId"]
+                sheet_exists = True
+    
+        output = {}
+        output["Spreadsheet_ID"] = spreadsheet_id
+        output["Sheet_Exists"] = sheet_exists
+        output["Sheet_Name"] = sheet_name
+        output["Sheet_ID"] = sheet_id
+        return output
+    
+    # Adds a new sheet with the specified sheet name to a google spreadsheet
+    def add_sheet(self, spreadsheet_id, sheet_name):
+        request_body = {
+            'requests': [{
+                'addSheet': {
+                    'properties': {
+                        'title': sheet_name,
+                        'tabColor': {
+                            'red': 0.44,
+                            'green': 0.99,
+                            'blue': 0.50
+                        }
+                    }
+                }
+            }]
+        }
+
+        response = self.sheets_service().spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body=request_body).execute()
+
+        return response
+
 class Meeting:
     def __init__(self):
         self.config = Config()
-        g = Google()
+        g = Google(self.config)
 
         self.sheets_service = g.sheets_service()
 
     def GetInformation(self, meeting_date):
-        meeting_topic = ""
-        cpe_group = ""
-        cpe_domain = ""
-        meeting_month_date = ""
-        meet_date = ""
+        output = {}
         meeting_found = False
 
         data =  self.sheets_service.spreadsheets().values().get(spreadsheetId=self.config.MeetingInfoSheetID, range='Sheet1').execute().get('values')[1:]
 
+        if isinstance(meeting_date, numpy.datetime64):
+            meeting_date = pd.to_datetime(meeting_date)
+
         if isinstance(meeting_date, pd.Timestamp):
             meet_date = meeting_date.strftime("%m/%d/%Y")
             meeting_month_date = meeting_date.strftime("%b %Y")
+        else:
+            raise Exception("Meeting date is not valid")
 
         for i, row in enumerate(data):
             if row[0] == meet_date:
-                meeting_topic = "{0} (ISC)² Silicon Valley Chapter Meeting - {1} - {2}".format(meeting_month_date, row[1], row[4])
-                cpe_group = row[2]
-                cpe_domain = row[3]
+                output["Meeting_Date"] = row[0]
+                output["Meeting_Topic"] = row[1]
+                output["CPE_Group"] = row[2]
+                output["CPE_Domain"] = row[3]
+                output["Speaker_Name"] = row[4]
+                output["Meeting_Topic_Long"] = "{0} (ISC)² Silicon Valley Chapter Meeting - {1} - {2}".format(meeting_month_date, row[1], row[4])  
                 meeting_found = True
                 break
 
         if not meeting_found:
             raise Exception("Meeting Info not found in the spreadsheet")
 
-        return meeting_topic, cpe_group, cpe_domain
+        return output

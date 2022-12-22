@@ -23,10 +23,10 @@ class MemberVerification:
 
     def __init__(self, configuration):
         self.config = configuration
-        self.g = Google()
+        self.g = Google(configuration)
     
     def VerifyMembers(self, inputFile, outputFile):
-        self.g.download_file_csv(self.config.MetricsSheetID, inputFile, "text/csv")
+        self.g.download_file(self.config.MetricsSheetID, inputFile, "text/csv")
 
         options = Options()
         options.headless = False

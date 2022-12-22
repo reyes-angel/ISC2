@@ -3,6 +3,7 @@ from reportdatamanager import ReportDataManager
 from config import Config
 import sys
 import getopt
+import pandas as pd
 
 def main(argv):
     c = Config()
@@ -52,6 +53,9 @@ def main(argv):
     
     rdm.WriteCPEFileToDrive(processedFiles["cpe"])
     rdm.WriteMetricsToSheet(processedFiles["metrics"])
+    rdm.WriteCertificateInfoToSheet(processedFiles["attendees"], processedFiles["meeting_date"])
+    #TODO: Enable sending the CPE Certificates
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

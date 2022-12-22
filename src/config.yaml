@@ -1,13 +1,30 @@
 ---
 meeting_start_hour: 18
 meeting_end_hour: 20
+config_path: "<<path to config files here>>"
 input_path: "<<path to input files here>>"
 output_path: "<<path to output files here>>"
 cpe_template_path: "<<path to cpe template file here>>"
 chapter_name: "(ISC)2 - Silicon Valley Chapter"
 chapter-officers:
-  Test_Officer:
-    email: "officer@somthing.org"
+  Membership:
+    email: "officer@something.org"
+    user_name: "Some Officer"
+    member_first_name: "Some"
+    member_last_name: "Officer"
+    member_certification_id: "536176"
+    personal_email: "me@gmail.com"
+    phone_number: "None"
+  President:
+    email: "officer@something.org"
+    user_name: "Some Officer"
+    member_first_name: "Some"
+    member_last_name: "Officer"
+    member_certification_id: "536176"
+    personal_email: "me@gmail.com"
+    phone_number: "None"
+  Training:
+    email: "officer@something.org"
     user_name: "Some Officer"
     member_first_name: "Some"
     member_last_name: "Officer"
@@ -17,9 +34,17 @@ chapter-officers:
 
 # Google Configuration Values
 # ================================
+# ID of google sheet to store CPE Certificate information
+cpe_certificate_sheet_id: ""
+# ID of the google doc file that is used as a template for the CPE Certifictes
+cpe_certifictate_template_id: ""
+# Folder to store the member CPE Certificates
+cpe_certificate_folder_id: ""
+# Folder to store CPE files to be sent to (ISC)2
+cpe_folder_id: ""
 # ID of google sheet to store metrics
-metrics_sheet_id: "some value here"
-# Folder to store CPE files
-cpe_folder_id: "some value here"
+metrics_sheet_id: ""
 # Folder where Atttendee Report files are stored
-attendee_report_folder_id: "some value here"
+attendee_report_folder_id: ""
+# ID of the google sheet to store meeting information
+meeting_info_sheet_id: ""
