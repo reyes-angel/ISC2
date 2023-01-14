@@ -51,6 +51,3 @@ input_file = c.InputPath + "MembershipMetrics.csv"
 
 da = DistinctAttendees(c)
 da.CreateReport(input_file)
-
-#Test
-#Test2
